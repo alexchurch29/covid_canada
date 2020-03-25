@@ -65,9 +65,9 @@ def plot_canada(df):
     p3 = plt.bar(df.date, df.negative_cases, width, bottom=df.positive_cases + df.pending_cases, color=pal[2])
 
     plt.ylabel('Tests Administered', fontsize=10)
-    plt.title('COVID-19 Test Results (Canada)\nvia Public Health Agency of Canada', fontsize=12)
+    plt.title('COVID-19 Test Results (Canada - Cumulative)\nvia Public Health Agency of Canada', fontsize=12)
     plt.xticks(df.date, rotation=45, fontsize=8)
-    plt.yticks(fontsize=6)
+    plt.yticks(fontsize=8)
     plt.tick_params(axis=u'both', which=u'both', length=0)
 
     plt2 = plt.twinx()
@@ -78,7 +78,7 @@ def plot_canada(df):
     plt2.set_ylim(0, 0.1)
     plt2.set_yticklabels(['{:,.2%}'.format(x) for x in plt2.get_yticks()], fontsize=8)
     plt2.set_xticks(df.date)
-    plt.legend((p1[0], p2[0], p3[0], p4[0]), ('Positive', 'Pending', 'Negative', 'Positive Test Rate (Excluding Pending Results)'), fontsize=8, frameon=False, loc=2)
+    plt.legend((p1[0], p2[0], p3[0], p4[0]), ('Positive (Actual)', 'Pending (Estimated)', 'Negative (Estimated)', 'Positive Test Rate (Includes Probable)'), fontsize=8, frameon=False, loc=2)
     plt2.plot([], [])
 
     plt.savefig('all_cases_canada.png')
@@ -109,7 +109,7 @@ def plot_canada2(df):
     plt2.tick_params(axis=u'both', which=u'both', length=0)
     plt2.set_yticklabels(df.tests.astype(int), fontsize=8)
     plt2.set_xticks(df.date)
-    plt.legend((p1[0], p2[0]), ('Positive Cases', 'Tests Administered'), fontsize=8, frameon=False)
+    plt.legend((p1[0], p2[0]), ('Positive Cases (Includes Probable)', 'Tests Administered'), fontsize=8, frameon=False)
     plt2.set_yscale('linear')
     plt2.plot([], [])
 
@@ -132,14 +132,66 @@ def plot_provincial(df):
     p8 = plt.bar(df.date, df.Territories, width, bottom=df.Ontario + df.Quebec + df.BC + df.Manitoba + df.Saskatchewan + df.Alberta + df.Maritimes, color=pal[8])
     p9 = plt.bar(df.date, df.Repatriated, width, bottom=df.Ontario + df.Quebec + df.BC + df.Manitoba + df.Saskatchewan + df.Alberta + df.Maritimes + df.Territories, color=pal[7])
 
-    plt.ylabel('Positive Cases', fontsize=10)
-    plt.title('COVID-19 Cases by Province\nvia Public Health Agency of Canada', fontsize=12)
+    plt.ylabel('Positive Cases (Includes Probable)', fontsize=10)
+    plt.title('COVID-19 Cases by Province (Cumulative)\nvia Public Health Agency of Canada', fontsize=12)
     plt.legend((p1[0], p2[0], p3[0], p4[0], p5[0], p6[0], p7[0], p8[0], p9[0]), ('Ontario', 'Quebec', 'BC', 'Manitoba', 'Saskatchewan', 'Alberta', 'Maritimes', 'Territories', 'Repatriated'), fontsize=6, frameon=False)
-    plt.xticks(df.date, rotation=45, fontsize=6)
-    plt.yticks(fontsize=6)
+    plt.xticks(df.date, rotation=45, fontsize=8)
+    plt.yticks(fontsize=8)
     plt.tick_params(axis=u'both', which=u'both', length=0)
 
-    plt.savefig('positive_cases_by_province.png')
+    plt2 = plt.twinx()
+    x = mdates.date2num(df.date)
+    f = interp1d(x, df.Deaths / (df.Ontario + df.Quebec + df.BC + df.Manitoba + df.Saskatchewan + df.Alberta + df.Maritimes + df.Territories + df.Repatriated), 'cubic')
+    x = np.linspace(x.min(), x.max(), num=300)
+    p10 = plt2.plot(x, f(x), color=pal[3], marker='', linewidth=2)
+    plt2.set_ylabel('Death Rate', fontsize=10)
+    plt2.tick_params(axis=u'both', which=u'both', length=0)
+    plt2.set_ylim(0, 0.1)
+    plt2.set_yticklabels(['{:,.2%}'.format(x) for x in plt2.get_yticks()], fontsize=8)
+    plt2.set_xticks(df.date)
+    plt.legend((p1[0], p2[0], p3[0], p4[0], p5[0], p6[0], p7[0], p8[0], p9[0], p10[0]), ('Ontario', 'Quebec', 'BC', 'Manitoba', 'Saskatchewan', 'Alberta', 'Maritimes', 'Territories', 'Repatriated', 'Death Rate'), loc=2, fontsize=6, frameon=False)
+    plt2.plot([], [])
+
+    plt.savefig('positive_cases_by_province_cumulative.png')
+    plt.clf()
+    plt.cla()
+    return
+
+
+def plot_provincial2(df):
+    width = 0.35  # the width of the bars: can also be len(x) sequence
+
+    p1 = plt.bar(df.date, df.Ontario_delta, width, color=pal[0])
+    p2 = plt.bar(df.date, df.Quebec_delta, width, bottom=df.Ontario_delta, color=pal[1])
+    p3 = plt.bar(df.date, df.BC_delta, width, bottom=df.Ontario_delta + df.Quebec_delta, color=pal[2])
+    p4 = plt.bar(df.date, df.Manitoba_delta, width, bottom=df.Ontario_delta + df.Quebec_delta + df.BC_delta, color=pal[3])
+    p5 = plt.bar(df.date, df.Saskatchewan_delta, width, bottom=df.Ontario_delta + df.Quebec_delta + df.BC_delta + df.Manitoba_delta, color=pal[4])
+    p6 = plt.bar(df.date, df.Alberta_delta, width, bottom=df.Ontario_delta + df.Quebec_delta + df.BC_delta + df.Manitoba_delta + df.Saskatchewan_delta, color=pal[5])
+    p7 = plt.bar(df.date, df.Maritimes_delta, width, bottom=df.Ontario_delta + df.Quebec_delta + df.BC_delta + df.Manitoba_delta + df.Saskatchewan_delta + df.Alberta_delta, color=pal[6])
+    p8 = plt.bar(df.date, df.Territories_delta, width, bottom=df.Ontario_delta + df.Quebec_delta + df.BC_delta + df.Manitoba_delta + df.Saskatchewan_delta + df.Alberta_delta + df.Maritimes_delta, color=pal[8])
+    p9 = plt.bar(df.date, df.Repatriated_delta, width, bottom=df.Ontario_delta + df.Quebec_delta + df.BC_delta + df.Manitoba_delta + df.Saskatchewan_delta + df.Alberta_delta + df.Maritimes_delta + df.Territories_delta, color=pal[7])
+
+    plt.ylabel('Positive Cases (Includes Probable)', fontsize=10)
+    plt.title('COVID-19 Cases by Province (Daily)\nvia Public Health Agency of Canada', fontsize=12)
+    plt.legend((p1[0], p2[0], p3[0], p4[0], p5[0], p6[0], p7[0], p8[0], p9[0]), ('Ontario', 'Quebec', 'BC', 'Manitoba', 'Saskatchewan', 'Alberta', 'Maritimes', 'Territories', 'Repatriated'), fontsize=6, frameon=False)
+    plt.xticks(df.date, rotation=45, fontsize=8)
+    plt.yticks(fontsize=8)
+    plt.tick_params(axis=u'both', which=u'both', length=0)
+
+    plt2 = plt.twinx()
+    x = mdates.date2num(df.date)
+    f = interp1d(x, df.Deaths / (df.Ontario + df.Quebec + df.BC + df.Manitoba + df.Saskatchewan + df.Alberta + df.Maritimes + df.Territories + df.Repatriated), 'cubic')
+    x = np.linspace(x.min(), x.max(), num=300)
+    p10 = plt2.plot(x, f(x), color=pal[3], marker='', linewidth=2)
+    plt2.set_ylabel('Death Rate', fontsize=10)
+    plt2.tick_params(axis=u'both', which=u'both', length=0)
+    plt2.set_ylim(0, 0.1)
+    plt2.set_yticklabels(['{:,.2%}'.format(x) for x in plt2.get_yticks()], fontsize=8)
+    plt2.set_xticks(df.date)
+    plt.legend((p1[0], p2[0], p3[0], p4[0], p5[0], p6[0], p7[0], p8[0], p9[0], p10[0]), ('Ontario', 'Quebec', 'BC', 'Manitoba', 'Saskatchewan', 'Alberta', 'Maritimes', 'Territories', 'Repatriated', 'Death Rate'), loc=2, fontsize=6, frameon=False)
+    plt2.plot([], [])
+
+    plt.savefig('positive_cases_by_province_daily.png')
     plt.clf()
     plt.cla()
     return
@@ -155,7 +207,7 @@ def plot_ontario(df):
     p5 = plt.bar(df.date, df.deceased, width, bottom=df.positive + df.pending + df.resolved + df.negative, color=pal[7])
 
     plt.ylabel('Tests Administered', fontsize=10)
-    plt.title('COVID-19 Test Results (Ontario)\nvia Public Health Ontario', fontsize=12)
+    plt.title('COVID-19 Test Results (Ontario - Cumulative)\nvia Public Health Ontario', fontsize=12)
     plt.xticks(df.date, rotation=45, fontsize=8)
     plt.yticks(fontsize=6)
     plt.tick_params(axis=u'both', which=u'both',length=0)
@@ -171,7 +223,43 @@ def plot_ontario(df):
     plt.legend((p1[0], p2[0], p3[0], p4[0], p5[0], p6[0]), ('Positive', 'Pending', 'Resolved', 'Negative', 'Deceased', 'Positive Test Rate (Excluding Pending Results)'), fontsize=8, frameon=False, loc=2)
     plt2.plot([], [])
 
-    plt.savefig('all_cases_ontario.png')
+    plt.savefig('all_cases_ontario_cumulative.png')
+    plt.clf()
+    plt.cla()
+    return
+
+
+def plot_ontario3(df):
+    width = 0.35  # the width of the bars: can also be len(x) sequence
+
+    p1 = plt.bar(df.date, df.delta_positive, width, color=pal[0])
+    p3 = plt.bar(df.date, df.delta_resolved, width, bottom=df.delta_positive, color=pal[1])
+    p4 = plt.bar(df.date, df.delta_negative, width, bottom=df.delta_positive + df.delta_resolved, color=pal[2])
+    p5 = plt.bar(df.date, df.delta_deceased, width, bottom=df.delta_positive + df.delta_resolved + df.delta_negative, color=pal[7])
+
+    plt.ylabel('Test Results Received', fontsize=10)
+    plt.title('COVID-19 Test Results (Ontario - Daily)\nvia Public Health Ontario', fontsize=12)
+    plt.xticks(df.date, rotation=45, fontsize=8)
+    plt.yticks(fontsize=6)
+    plt.tick_params(axis=u'both', which=u'both',length=0)
+
+    plt2 = plt.twinx()
+    df2 = df.drop(df.index[0])
+    # x = mdates.date2num(df2.date)
+    # f = interp1d(x, df2.delta_ratio, 'cubic')
+    # x = np.linspace(x.min(), x.max(), num=300)
+    ysmoothed = gaussian_filter1d(df2.delta_ratio, sigma=2)
+    p6 = plt2.plot(df2.date, ysmoothed, color=pal[3], marker='', linewidth=2)
+    plt2.set_ylabel('Ratio of Positive Results', fontsize=10)
+    plt2.tick_params(axis=u'both', which=u'both', length=0)
+    plt2.set_ylim(0,0.1)
+    plt2.set_yticklabels(['{:,.2%}'.format(x) for x in plt2.get_yticks()], fontsize=8)
+    plt2.set_xticks(df.date)
+    plt.legend((p1[0], p3[0], p4[0], p5[0], p6[0]), ('New Positive Cases', 'New Resolved Cases', 'New Negative Cases', 'New Deceased Cases', '% of New Cases Returning Positive'), fontsize=8, frameon=False, loc=2)
+    plt2.plot([], [])
+
+    # plt.show()
+    plt.savefig('all_cases_ontario_daily.png')
     plt.clf()
     plt.cla()
     return
@@ -209,11 +297,18 @@ def plot_ontario2(df):
     return
 
 
+def total_infected(fatality_rate=0.06, hospitalization=0.2, icu=0.05, extreme=0.025, time_to_death=17.3, doubling_time=0.062):
+
+    return
+
+
 if __name__ == '__main__':
     dfs = import_data()
     plot_canada(dfs[0])
     plot_canada2(dfs[0])
     plot_provincial(dfs[0])
+    plot_provincial2(dfs[0])
     plot_ontario(dfs[1])
     plot_ontario2(dfs[1])
+    plot_ontario3(dfs[1])
 
